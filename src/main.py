@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from src.schemas import PredictionRequest, PredictionResponse
 from src.model import SentimentModel
 
@@ -10,6 +10,7 @@ model = SentimentModel()
 @app.get("/health")
 async def health():
     return {"status": "ok"}
+
 
 @app.post("/predict", response_model=PredictionResponse)
 async def predict(request: PredictionRequest):

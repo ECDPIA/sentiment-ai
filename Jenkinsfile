@@ -34,11 +34,11 @@ pipeline {
                 sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
                 // Lancer pytest dans le conteneur fraichement construit
                 sh """
-                    docker run --rm -e CI=true ${IMAGE_NAME}:${IMAGE_TAG}
-                    pytest tests/ -v \
-                        --cov=src \
-                        --cov-report=term-missing \
-                        --cov-fail-under=70
+                    docker run --rm -e CI=true ${IMAGE_NAME}:${IMAGE_TAG} \
+                        pytest tests/ -v \
+                            --cov=src \
+                            --cov-report=term-missing \
+                            --cov-fail-under=70
                     """
             }
 

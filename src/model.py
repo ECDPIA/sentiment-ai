@@ -1,5 +1,8 @@
 
 class SentimentModel:
+    """
+    Model fictif
+    """
     def __init__(self):
         print("[SentimentModel] Modèle chargé")
 

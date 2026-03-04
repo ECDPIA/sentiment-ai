@@ -7,6 +7,8 @@ pipeline {
         REGISTRY = 'ghcr.io/Didios'
         // Tag = 7 premiers caractères du SHA Git
         IMAGE_TAG = sh(script: 'git rev-parse --short HEAD', returnStdout:true).trim()
+        // Nom de la branch actuelle
+        BRANCH = sh(script: 'git rev-parse --abbrev-ref HEAD', returnStdout:true).trim()
     }
     
     stages {
@@ -14,7 +16,7 @@ pipeline {
             steps {
                 // Jenkins clone automatiquement le repo configuré dans le job
                 checkout scm
-                echo "Branche : ${env.BRANCH_NAME}"
+                echo "Branche : ${BRANCH}"
                 echo "Commit : ${env.GIT_COMMIT}"
                 sh 'git log --oneline -5'
             }
@@ -52,7 +54,9 @@ pipeline {
         stage('Push') {
             // Ce stage ne s'exécute QUE sur la branche main
             when {
-                branch 'main' // does not work if on PR
+                expression {
+                    return BRANCH == 'main'
+                }
             }
             steps {
                 // Se connecter au registry avec les credentials Jenkins

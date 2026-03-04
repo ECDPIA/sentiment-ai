@@ -52,7 +52,7 @@ pipeline {
         stage('Push') {
             // Ce stage ne s'exécute QUE sur la branche main
             when {
-                branch 'main'
+                branch 'main' // does not work if on PR
             }
             steps {
                 // Se connecter au registry avec les credentials Jenkins

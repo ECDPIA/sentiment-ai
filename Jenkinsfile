@@ -71,8 +71,8 @@ pipeline {
                     sh '''
                         docker run --rm \
                             --network tp-sentiment-ai_cicd-network \
-                            --volumes-from jenkins \
-                            -w "$WORKSPACE" \
+                            -v "$WORKSPACE":/workspace \
+                            -w /workspace \
                             -e SONAR_HOST_URL="$SONAR_HOST_URL" \
                             -e SONAR_TOKEN="$SONARQUBE_TOKEN" \
                             sonarsource/sonar-scanner-cli:latest \

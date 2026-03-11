@@ -104,6 +104,28 @@ pipeline {
             }
         }
 
+        stage ('Security Scan') {
+            steps {
+                // Scanner l'image construite avec trivy
+                // -- exit-code 1 : fail si des CVE CRITICAL sont trouvées
+                sh '''
+                    docker run --rm \
+                        -v /var/run/docker.sock:/var/run/docker.sock \
+                        -v trivy-cache:/root/.cache/trivy \
+                        aquasec/trivy:latest image \
+                        --severity HIGH,CRITICAL \
+                        --exit-code 1 \
+                        --format table \
+                        $IMAGE_NAME:$IMAGE_TAG
+                '''
+            }
+            post {
+                failure {
+                    echo 'Vulnerabilities CRITICAL ou HIGH detectees ! Corrigez avant de déployer.'
+                }
+            }
+        }
+
         stage('Push') {
             // Ce stage ne s'exécute QUE sur la branche main
             when {

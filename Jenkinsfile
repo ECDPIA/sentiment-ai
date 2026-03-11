@@ -80,7 +80,7 @@ pipeline {
                             -Dsonar.projectKey=sentiment-ai \
                             -Dsonar.projectName=SentimentAI \
                             -Dsonar.projectBaseDir=/workspace \
-                            -Dsonar.source=src \
+                            -Dsonar.sources=/workspace/src \
                             -Dsonar.python.version=3.11 \
                             -Dsonar.python.coverage.reportPaths=/workspace/coverage.xml \
                             -Dsonar.sourceEncoding=UTF-8 \

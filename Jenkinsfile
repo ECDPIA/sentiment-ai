@@ -30,8 +30,8 @@ pipeline {
 
         stage('Build & Test') {
             steps {
-                sh """
-                    docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
+                sh '''
+                    docker build -t $IMAGE_NAME:$IMAGE_TAG .
 
                     docker rm -f test-runner 2>/dev/null || true
 
@@ -40,7 +40,7 @@ pipeline {
                         -e CI=true \
                         -e COVERAGE_FILE=/tmp/.coverage \
                         --name test-runner \
-                        ${IMAGE_NAME}:${IMAGE_TAG} \
+                        $IMAGE_NAME:$IMAGE_TAG \
                         pytest tests/ -v \
                             --cov=src \
                             --cov-report=xml:/tmp/coverage.xml \
@@ -52,7 +52,7 @@ pipeline {
                     docker cp test-runner:/tmp/coverage.xml ./coverage.xml 2>/dev/null || true
                     docker rm -f test-runner 2>/dev/null || true
                     exit $TEST_EXIT_CODE
-                """
+                '''
             }
 
             post {
@@ -68,7 +68,7 @@ pipeline {
             }
             steps {
                 withSonarQubeEnv('sonarqube') {
-                    sh """
+                    sh '''
                         docker run --rm \
                             --network cicd-network \
                             --volumes-from jenkins \
@@ -85,7 +85,7 @@ pipeline {
                             -Dsonar.python.coverage.reportPath=coverage.xml \
                             -Dsonar.sourceEncoding=UTF-8 \
                             -Dsonar.scanner.metadataFilePath=$WORKSPACE/report-task.txt
-                    """
+                    '''
                 }
             }
         }

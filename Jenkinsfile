@@ -175,6 +175,8 @@ pipeline {
                     # Arrêter l'éventuel staging précédent
                     docker compose -f docker-compose.yml \
                         -p staging down 2>/dev/null || true
+                    
+                    export IMAGE_TAG=$IMAGE_TAG
 
                     # Démarrer la nouvelle version en staging
                     docker compose -f docker-compose.yml \

@@ -30,21 +30,70 @@ pipeline {
 
         stage('Build & Test') {
             steps {
-                // Construire l'image Docker
-                sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
-                // Lancer pytest dans le conteneur fraichement construit
                 sh """
-                    docker run --rm -e CI=true ${IMAGE_NAME}:${IMAGE_TAG} \
+                    docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
+
+                    docker rm -f test-runner 2>/dev/null || true
+
+                    set +e
+                    docker run \
+                        -e CI=true \
+                        -e COVERAGE_FILE=/tmp/.coverage \
+                        --name test-runner \
+                        ${IMAGE_NAME}:${IMAGE_TAG} \
                         pytest tests/ -v \
                             --cov=src \
+                            --cov-report=xml:/tmp/coverage.xml \
                             --cov-report=term-missing \
                             --cov-fail-under=70
-                    """
+                    TEST_EXIT_CODE=$?
+                    set -e
+
+                    docker cp test-runner:/tmp/coverage.xml ./coverage.xml 2>/dev/null || true
+                    docker rm -f test-runner 2>/dev/null || true
+                    exit $TEST_EXIT_CODE
+                """
             }
 
             post {
                 failure {
-                    echo 'Tests echoues ou coverage insuffisant (< 70%)'
+                    echo 'Tests échoués ou coverage insuffisant (< 70%)'
+                }
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            environment {
+                SONARQUBE_TOKEN = credentials('sonar-token')
+            }
+            steps {
+                withSonarQubeEnv('sonarqube') {
+                    sh """
+                        docker run --rm \
+                            --network cicd-network \
+                            --volumes-from jenkins \
+                            -w "$WORKSPACE" \
+                            -e SONAR_HOST_URL="$SONAR_HOST_URL" \
+                            -e SONAR_TOKEN="$SONARQUBE_TOKEN" \
+                            sonarsource/sonar-scanner-cli:latest \
+                            sonar-scanner \
+                            -Dsonar.projectKey=sentiment-ai \
+                            -Dsonar.projectName=SentimentAI \
+                            -Dsonar.projectBaseDir="$WORKSPACE" \
+                            -Dsonar.source=src \
+                            -Dsonar.python.version=3.11 \
+                            -Dsonar.python.coverage.reportPath=coverage.xml \
+                            -Dsonar.sourceEncoding=UTF-8 \
+                            -Dsonar.scanner.metadataFilePath=$WORKSPACE/report-task.txt
+                    """
+                }
+            }
+        }
+
+        stage('Quality Gate') {
+            steps {
+                timeout(time: 15, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
                 }
             }
         }

@@ -70,7 +70,7 @@ pipeline {
                 withSonarQubeEnv('sonarqube') {
                     sh '''
                         docker run --rm \
-                            --network cicd-network \
+                            --network tp-sentiment-ai_cicd-network \
                             --volumes-from jenkins \
                             -w "$WORKSPACE" \
                             -e SONAR_HOST_URL="$SONAR_HOST_URL" \

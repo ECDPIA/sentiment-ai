@@ -38,18 +38,21 @@ pipeline {
                     set +e
                     docker run \
                         -e CI=true \
-                        -e COVERAGE_FILE=/tmp/.coverage \
+                        -e COVERAGE_FILE=.coverage \
                         --name test-runner \
                         $IMAGE_NAME:$IMAGE_TAG \
                         pytest tests/ -v \
                             --cov=src \
-                            --cov-report=xml:/tmp/coverage.xml \
+                            --cov-report=xml:coverage.xml \
                             --cov-report=term-missing \
                             --cov-fail-under=70
                     TEST_EXIT_CODE=$?
                     set -e
+                    
+                    WORKDIR=$(docker inspect --format '{{.Config.WorkingDir}}' $IMAGE_NAME:$IMAGE_TAG)
+                    WORKDIR=${WORKDIR:-/}
 
-                    docker cp test-runner:/tmp/coverage.xml ./coverage.xml 2>/dev/null || true
+                    docker cp test-runner:$WORKDIR/coverage.xml ./coverage.xml 2>/dev/null || true
                     docker rm -f test-runner 2>/dev/null || true
                     exit $TEST_EXIT_CODE
                 '''
